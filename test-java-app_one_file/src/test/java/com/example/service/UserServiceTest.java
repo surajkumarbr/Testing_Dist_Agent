@@ -88,6 +88,19 @@ class UserServiceTest {
     }
 
     @Test
+    void deleteUser_removesOnlyFirstOccurrence_whenUserIsDuplicated() {
+        UserService service = new UserService();
+        service.addUser("alice");
+        service.addUser("bob");
+        service.addUser("alice");
+
+        assertTrue(service.deleteUser("alice"));
+
+        assertEquals(2, service.getUserCount());
+        assertEquals(List.of("bob", "alice"), service.getAllUsers());
+    }
+
+    @Test
     void getAllUsers_returnsCopy_modifyingReturnedListDoesNotAffectInternalState() {
         UserService service = new UserService();
         service.addUser("alice");
@@ -100,6 +113,19 @@ class UserServiceTest {
         // Internal list must remain unchanged
         assertEquals(2, service.getUserCount());
         assertEquals(List.of("alice", "bob"), service.getAllUsers());
+    }
+
+    @Test
+    void getAllUsers_snapshotDoesNotChangeAfterServiceIsClearedAndReused() {
+        UserService service = new UserService();
+        service.addUser("alice");
+        List<String> snapshot = service.getAllUsers();
+
+        service.clearAllUsers();
+        service.addUser("bob");
+
+        assertEquals(List.of("alice"), snapshot);
+        assertEquals(List.of("bob"), service.getAllUsers());
     }
 
     @Test
